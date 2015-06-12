@@ -1,7 +1,7 @@
 """
 Beating the benchmark for Liberty Mutual Fund @ Kaggle
 
-__author__ : Abhishek Thakur
+
 """
 
 import numpy as np
