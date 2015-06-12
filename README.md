@@ -1,2 +1,2 @@
 # Kaggle
-All my kaggle work
+Some of my kaggle work so far,mainly python and R scripts.
