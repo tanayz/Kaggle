@@ -126,8 +126,8 @@ def quadratic_weighted_kappa(y, y_pred):
 if __name__ == '__main__':
 
     # Load the training file
-    train = pd.read_csv('../input/train.csv')
-    test = pd.read_csv('../input/test.csv')
+    train = pd.read_csv('input\\train.csv')
+    test = pd.read_csv('input\\test.csv')
     
     # we dont need ID columns
     idx = test.id.values.astype(int)
@@ -168,8 +168,8 @@ if __name__ == '__main__':
                     	     ('svm', svm_model)])
     
     # Create a parameter grid to search for best parameters for everything in the pipeline
-    param_grid = {'svd__n_components' : [300],
-                  'svm__C': [9]}
+    param_grid = {'svd__n_components' : [250,300,350],
+                  'svm__C': [8,9,10]}
     
     # Kappa Scorer 
     kappa_scorer = metrics.make_scorer(quadratic_weighted_kappa, greater_is_better = True)
@@ -194,8 +194,8 @@ if __name__ == '__main__':
     preds = best_model.predict(X_test)
     
     #load data
-    train = pd.read_csv("../input/train.csv").fillna("")
-    test  = pd.read_csv("../input/test.csv").fillna("")
+    train = pd.read_csv("input\\train.csv").fillna("")
+    test  = pd.read_csv("input\\test.csv").fillna("")
     
     #remove html, remove non text or numeric, make query and title unique features for counts using prefix (accounted for in stopwords tweak)
     stemmer = PorterStemmer()
@@ -252,5 +252,3 @@ if __name__ == '__main__':
     # Create your first submission file
     submission = pd.DataFrame({"id": idx, "prediction": p3})
     submission.to_csv("submmission_v3.csv", index=False)
-
-
