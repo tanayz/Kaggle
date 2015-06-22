@@ -6,23 +6,19 @@ __author__ : OverfitterScientist
 """
 import pandas as pd
 import numpy as np
-from sklearn.linear_model import LogisticRegression
+#from sklearn.linear_model import LogisticRegression
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.svm import SVC
 from sklearn.decomposition import TruncatedSVD
 from sklearn.preprocessing import StandardScaler
-from sklearn import decomposition, pipeline, metrics, grid_search
+from sklearn import pipeline, metrics, grid_search
+#from sklearn import decomposition
 from nltk.stem.porter import *
-import pandas as pd
-import numpy as np
 import re
 from bs4 import BeautifulSoup
 from sklearn.pipeline import Pipeline
-from sklearn.decomposition import TruncatedSVD
-from sklearn.preprocessing import StandardScaler
-from sklearn.svm import SVC
-from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_extraction import text
+from sklearn.metrics import accuracy_score,classification_report
 # array declarations
 sw=[]
 s_data = []
@@ -126,8 +122,8 @@ def quadratic_weighted_kappa(y, y_pred):
 if __name__ == '__main__':
 
     # Load the training file
-    train = pd.read_csv('input\\train.csv')
-    test = pd.read_csv('input\\test.csv')
+    train = pd.read_csv('input/train.csv')
+    test = pd.read_csv('input/test.csv')
     
     # we dont need ID columns
     idx = test.id.values.astype(int)
@@ -168,8 +164,8 @@ if __name__ == '__main__':
                     	     ('svm', svm_model)])
     
     # Create a parameter grid to search for best parameters for everything in the pipeline
-    param_grid = {'svd__n_components' : [250,300,350],
-                  'svm__C': [8,9,10]}
+    param_grid = {'svd__n_components' : [300],
+                  'svm__C': [9]}
     
     # Kappa Scorer 
     kappa_scorer = metrics.make_scorer(quadratic_weighted_kappa, greater_is_better = True)
@@ -194,8 +190,8 @@ if __name__ == '__main__':
     preds = best_model.predict(X_test)
     
     #load data
-    train = pd.read_csv("input\\train.csv").fillna("")
-    test  = pd.read_csv("input\\test.csv").fillna("")
+    train = pd.read_csv("input/train.csv").fillna("")
+    test  = pd.read_csv("input/test.csv").fillna("")
     
     #remove html, remove non text or numeric, make query and title unique features for counts using prefix (accounted for in stopwords tweak)
     stemmer = PorterStemmer()
@@ -232,6 +228,17 @@ if __name__ == '__main__':
     ('scl', StandardScaler(copy=True, with_mean=True, with_std=True)), 
     ('svm', SVC(C=9.0, kernel='rbf', degree=3, gamma=0.0, coef0=0.0, shrinking=True, probability=False, tol=0.001, cache_size=200, class_weight=None, verbose=False, max_iter=-1, random_state=None))])
     clf.fit(s_data, s_labels)
+    #############################Pritint result######################
+    yobs=s_labels
+    yhat=clf.predict(s_data)
+    print 'Printing model performance'
+    print confusion_matrix(yobs, yhat),"\n",
+    print accuracy_score(yobs,yhat),"\n",classification_report(yobs,yhat)    
+#    from sklearn import cross_validation
+#    scores = cross_validation.cross_val_score(clf, s_data, s_labels, cv=5,scoring='f1_weighted')
+#    print scores
+    
+    ################################################################
     t_labels = clf.predict(t_data)
     
     import math
