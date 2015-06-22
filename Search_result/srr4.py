@@ -17,7 +17,7 @@ import re
 from bs4 import BeautifulSoup
 from sklearn.pipeline import Pipeline
 from sklearn.feature_extraction import text
-from sklearn.metrics import accuracy_score,classification_report
+from sklearn.metrics import accuracy_score,classification_report,confusion_matrix
 from sklearn.ensemble import GradientBoostingClassifier
 
 # array declarations
@@ -80,18 +80,18 @@ if __name__ == '__main__':
     ts=clf.fit_transform(t_data)
     
     clf = GradientBoostingClassifier(n_estimators=600, learning_rate=0.1,
-     max_depth=10, random_state=0).fit(tr, s_labels)
+     max_depth=10, random_state=0,verbose=True).fit(tr, s_labels)
      
     yobs=s_labels
     yhat=clf.predict(tr)
     ypred=clf.predict(ts)
     
     print 'Printing model performance'
-#    print confusion_matrix(yobs, yhat),"\n",
+    print confusion_matrix(yobs, yhat),"\n",
     print accuracy_score(yobs,yhat),"\n",classification_report(yobs,yhat)    
-#    from sklearn import cross_validation
-#    scores = cross_validation.cross_val_score(clf, s_data, s_labels, cv=10,scoring='f1_weighted')
-#    print round(np.mean(scores),4),"\n",scores
+    from sklearn import cross_validation
+    scores = cross_validation.cross_val_score(clf, tr, s_labels, cv=5,scoring='f1_weighted')
+    print round(np.mean(scores),4),"\n",scores
     
     ################################################################
 #    t_labels = clf.predict(t_data)
