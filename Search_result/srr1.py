@@ -224,7 +224,7 @@ if __name__ == '__main__':
         t_data.append(s)
     #create sklearn pipeline, fit all, and predit test data
     clf = Pipeline([('v',TfidfVectorizer(min_df=5, max_df=500, max_features=None, strip_accents='unicode', analyzer='word', token_pattern=r'\w{1,}', ngram_range=(1, 2), use_idf=True, smooth_idf=True, sublinear_tf=True, stop_words = 'english')), 
-    ('svd', TruncatedSVD(n_components=200, algorithm='randomized', n_iter=5, random_state=None, tol=0.0)), 
+    ('svd', TruncatedSVD(n_components=175, algorithm='randomized', n_iter=5, random_state=None, tol=0.0)), 
     ('scl', StandardScaler(copy=True, with_mean=True, with_std=True)), 
     ('svm', SVC(C=9.0, kernel='rbf', degree=3, gamma=0.0, coef0=0.0, shrinking=True, probability=False, tol=0.001, cache_size=200, class_weight=None, verbose=False, max_iter=-1, random_state=None))])
     clf.fit(s_data, s_labels)
@@ -232,11 +232,11 @@ if __name__ == '__main__':
     yobs=s_labels
     yhat=clf.predict(s_data)
     print 'Printing model performance'
-    print confusion_matrix(yobs, yhat),"\n",
+#    print confusion_matrix(yobs, yhat),"\n",
     print accuracy_score(yobs,yhat),"\n",classification_report(yobs,yhat)    
-#    from sklearn import cross_validation
-#    scores = cross_validation.cross_val_score(clf, s_data, s_labels, cv=5,scoring='f1_weighted')
-#    print scores
+    from sklearn import cross_validation
+    scores = cross_validation.cross_val_score(clf, s_data, s_labels, cv=10,scoring='f1_weighted')
+    print round(np.mean(scores),4),"\n",scores
     
     ################################################################
     t_labels = clf.predict(t_data)
@@ -249,7 +249,7 @@ if __name__ == '__main__':
         p3.append(int(x))
         
         
-    
+    ######################## Do the ensembling here ##################
     # p3 = (t_labels + preds)/2
     # p3 = p3.apply(lambda x:math.floor(x))
     # p3 = p3.apply(lambda x:int(x))
@@ -258,4 +258,4 @@ if __name__ == '__main__':
 
     # Create your first submission file
     submission = pd.DataFrame({"id": idx, "prediction": p3})
-    submission.to_csv("submmission_v3.csv", index=False)
+    submission.to_csv("submmission_v4.csv", index=False)
