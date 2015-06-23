@@ -72,15 +72,17 @@ if __name__ == '__main__':
         t_data.append(s)
     #create sklearn pipeline, fit all, and predit test data
     clf = Pipeline([('v',TfidfVectorizer(min_df=5, max_df=500, max_features=None, strip_accents='unicode', analyzer='word', token_pattern=r'\w{1,}', ngram_range=(1, 2), use_idf=True, smooth_idf=True, sublinear_tf=True, stop_words = 'english')), 
-    ('svd', TruncatedSVD(n_components=175, algorithm='randomized', n_iter=5, random_state=None, tol=0.0)), 
+    ('svd', TruncatedSVD(n_components=300, algorithm='randomized', n_iter=5, random_state=None, tol=0.0)), 
     ('scl', StandardScaler(copy=True, with_mean=True, with_std=True))]) 
 #    ('svm', SVC(C=9.0, kernel='rbf', degree=3, gamma=0.0, coef0=0.0, shrinking=True, probability=False, tol=0.001, cache_size=200, class_weight=None, verbose=False, max_iter=-1, random_state=None))])
 #    clf.fit(s_data, s_labels)
     tr=clf.fit_transform(s_data)
     ts=clf.fit_transform(t_data)
     
-    clf = GradientBoostingClassifier(n_estimators=600, learning_rate=0.1,
-     max_depth=10, random_state=0,verbose=True).fit(tr, s_labels)
+#    clf = GradientBoostingClassifier(n_estimators=600, learning_rate=0.1,
+#     max_depth=10, random_state=0,verbose=True).fit(tr, s_labels)
+    clf = SVC(C=9.0, kernel='rbf', degree=3, gamma=0.0, coef0=0.0, shrinking=True, probability=False, tol=0.001, cache_size=200, class_weight=None, verbose=True, max_iter=-1, random_state=None).fit(tr, s_labels)
+
      
     yobs=s_labels
     yhat=clf.predict(tr)
@@ -96,11 +98,12 @@ if __name__ == '__main__':
     ################################################################
 #    t_labels = clf.predict(t_data)
     
-    import math
+#    import math
     p3 = []
     for i in range(len(ypred)):
-        x = (int(t_labels[i]) + ypred[i])/2
-        x = math.floor(x)
+#        x = (int(t_labels[i]) + ypred[i])/2
+        x= ypred[i]
+#        x = math.floor(x)
         p3.append(int(x))
         
         
