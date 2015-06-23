@@ -9,22 +9,17 @@ multiprocessing support : Antonis Nikitakis
 """
 import pandas as pd
 import numpy as np
-from sklearn.linear_model import LogisticRegression
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.decomposition import TruncatedSVD
 from sklearn.preprocessing import StandardScaler
 from sklearn import decomposition, pipeline, metrics, grid_search
 from nltk.stem.porter import *
-import pandas as pd
-import numpy as np
 import re
 from bs4 import BeautifulSoup
 from sklearn.pipeline import Pipeline
-from sklearn.decomposition import TruncatedSVD
-from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
-from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_extraction import text
 # array declarations
 sw=[]
@@ -174,16 +169,18 @@ if __name__ == '__main__':
             scl = StandardScaler()
             
             # We will use SVM here..
-            svm_model = SVC()
+#            svm_model = SVC()
+            rf=RandomForestClassifier(n_estimators=400,max_depth=15,n_jobs=4,verbose=True)
             
             # Create the pipeline 
             clf = pipeline.Pipeline([('svd', svd),
             						 ('scl', scl),
-                            	     ('svm', svm_model)])
+                            	     ('rf', rf)])
+#                                     ('svm', svm_model)])
             
             # Create a parameter grid to search for best parameters for everything in the pipeline
-            param_grid = {'svd__n_components' : [400],
-                          'svm__C': [10]}
+            param_grid = {'svd__n_components' : [300,275,325],
+                          'rf__n_estimators': [400,350,450]}
             
             # Kappa Scorer 
             kappa_scorer = metrics.make_scorer(quadratic_weighted_kappa, greater_is_better = True)
@@ -212,10 +209,10 @@ if __name__ == '__main__':
             test  = pd.read_csv("input/test.csv").fillna("") 
             idx = test.id.values.astype(int)
             submission = pd.DataFrame({"id": idx, "prediction": preds})
-            submission.to_csv("./model1.csv", index=False)  
+            submission.to_csv("model1.csv", index=False)  
         
         else:
-            preds=load_preds("./model1.csv")          
+            preds=load_preds("model1.csv")          
 
      
         return preds
@@ -274,7 +271,7 @@ if __name__ == '__main__':
             submission = pd.DataFrame({"id": idx, "prediction": t_labels})
             submission.to_csv("model2.csv", index=False)
         else:
-            t_labels=load_preds("./model2.csv")
+            t_labels=load_preds("model2.csv")
             
         return t_labels
 
@@ -313,9 +310,7 @@ if __name__ == '__main__':
     print ('time=%f'%(end - start) )
   
       
-    
-
-
+ #### Ensembling the models ####
         
     import math
     p3 = []
@@ -326,9 +321,9 @@ if __name__ == '__main__':
         
         
     
-    p3 = (t_labels + preds)/2
-    p3 = p3.apply(lambda x:math.floor(x))
-    p3 = p3.apply(lambda x:int(x))
+#    p3 = (t_labels + preds)/2
+#    p3 = p3.apply(lambda x:math.floor(x))
+#    p3 = p3.apply(lambda x:int(x))
     
     # preds12 = 
 
