@@ -4,11 +4,11 @@ Created on Fri Jun 26 05:34:42 2015
 
 @author: tanay
 """
+from __future__ import division
 import logging
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 from bs4 import BeautifulSoup
-import gensim
-from gensim import corpora, models, similarities
+from gensim import corpora
 from nltk.stem.porter import PorterStemmer
 import re
 from sklearn.feature_extraction import text
@@ -84,24 +84,39 @@ for i in range(len(test.id)):
     s=" ".join([x for x in s.lower().split(" ") if x not in stop_words and len(x)>1])
     tsp.append(s.lower())
 
-l1=[]  
-l2=[int(x) for x in s_labels ] 
+l2=[]  
+l1=[int(x) for x in s_labels ] 
 for i in range(10158):
     dat= corpora.Dictionary([trp[i].split(" ")]).doc2bow(trq[i].lower().split())
-    l1.append(len(dat))
+    l2.append(len(dat)/(len(dat)+1))
 
 print np.corrcoef(l1, l2)[0, 1]
-#    corpus = gensim.matutils.Dense2Corpus(np.array(dat))
-#    dictionary=corpora.Dictionary([trp[i].split(" ")])
-#    lsi = models.LsiModel(corpus, id2word=dictionary, num_topics=2) 
-#    print lsi[dat]
-#    print dat,"\n",corpus
+
+
+from collections import Counter
+
+cnt=Counter(s.split(" "))
+cnt.most_common()
+
+from sklearn.feature_extraction.text import TfidfVectorizer
+tfidf = TfidfVectorizer() 
+
+tfv=[];lv=[]
+for i in range(10158):       
+    tfs = tfidf.fit_transform(trp[i].split(" "))
+    response = tfidf.transform(trq[i].split(" ")) 
+#    print response  
+    val=0    
+    feature_names = tfidf.get_feature_names()
+    for col in response.nonzero()[1]:
+#        print feature_names[col], ' - ', response[0, col]
+        val=val+response[0, col]
+#        print i,"-",val,"-",response[0, col]
+    tfv.append(val)
+    lv.append(len(response.nonzero()[0]))
     
-    
-    
-    
-    
-    
+print np.corrcoef(l1, tfv)[0, 1]
+print np.corrcoef(l1, lv)[0, 1]     
     
     
     
