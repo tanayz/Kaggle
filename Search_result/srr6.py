@@ -11,16 +11,16 @@ import pandas as pd
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.svm import SVC
-from sklearn.ensemble import RandomForestClassifier
+#from sklearn.ensemble import RandomForestClassifier
 from sklearn.decomposition import TruncatedSVD
 from sklearn.preprocessing import StandardScaler
-from sklearn import decomposition, pipeline, metrics, grid_search
-from nltk.stem.porter import *
+from sklearn import  pipeline, metrics, grid_search #decomposition,
+from nltk.stem.porter import PorterStemmer
 import re
 from bs4 import BeautifulSoup
 from sklearn.pipeline import Pipeline
-from sklearn.svm import SVC
 from sklearn.feature_extraction import text
+import trssv,tsssv
 # array declarations
 sw=[]
 s_data = []
@@ -127,10 +127,10 @@ def load_preds(csv_file):
     preds=preds['prediction']
     preds=list (preds)
     return preds
-
+tsssv
 if __name__ == '__main__':
     
-    def model1(n_jobs=2,compute_csv=True):
+    def model1(n_jobs=6,compute_csv=True):
         
         if (compute_csv):        
             #--------------------------Put your model here-----------------------------    
@@ -159,28 +159,28 @@ if __name__ == '__main__':
             
             # Fit TFIDF
             tfv.fit(traindata)
-            X =  tfv.transform(traindata) 
+            X =  tfv.transform(traindata)
             X_test = tfv.transform(testdata)
             
             # Initialize SVD
-            svd = TruncatedSVD()
-            
+            svd = TruncatedSVD(n_components=175,random_state=None)
+            X=svd.fit_transform(X)+trssv.sensimvar()
+            X_test=svd.fit_transform(X_test)+tsssv.sensimvar()
             # Initialize the standard scaler 
             scl = StandardScaler()
             
             # We will use SVM here..
-#            svm_model = SVC()
-            rf=RandomForestClassifier(n_estimators=400,max_depth=15,n_jobs=4,verbose=True)
+            svm_model = SVC()
+#            rf=RandomForestClassifier(n_estimators=400,max_depth=15,n_jobs=4,verbose=True)
             
             # Create the pipeline 
-            clf = pipeline.Pipeline([('svd', svd),
+            clf = pipeline.Pipeline([
             						 ('scl', scl),
-                            	     ('rf', rf)])
-#                                     ('svm', svm_model)])
+#                            	     ('rf', rf)])
+                                     ('svm', svm_model)])
             
             # Create a parameter grid to search for best parameters for everything in the pipeline
-            param_grid = {'svd__n_components' : [300,275,325],
-                          'rf__n_estimators': [400,350,450]}
+            param_grid = {'svm__C': [9]}
             
             # Kappa Scorer 
             kappa_scorer = metrics.make_scorer(quadratic_weighted_kappa, greater_is_better = True)
@@ -218,8 +218,12 @@ if __name__ == '__main__':
         return preds
     
     
-    def model2(n_jobs=2,compute_csv=True):
-
+    def model2(n_jobs=6,compute_csv=True):
+        s_data = []
+        s_labels = []
+        t_data = []
+        t_labels = []
+    
         
         if (compute_csv):
 
@@ -251,20 +255,24 @@ if __name__ == '__main__':
                 s= (" ").join([stemmer.stem(z) for z in s.split(" ")])
                 s_data.append(s)
                 s_labels.append(str(train["median_relevance"][i]))
+            s_data = s_data+trssv.sensimvar()
             for i in range(len(test.id)):
                 s=(" ").join(["q"+ z for z in BeautifulSoup(test["query"][i]).get_text().split(" ")]) + " " + (" ").join(["z"+ z for z in BeautifulSoup(test.product_title[i]).get_text().split(" ")]) + " " + BeautifulSoup(test.product_description[i]).get_text()
                 s=re.sub("[^a-zA-Z0-9]"," ", s)
                 s= (" ").join([stemmer.stem(z) for z in s.split(" ")])
                 t_data.append(s)
+            t_data = t_data+tsssv.sensimvar()
             #create sklearn pipeline, fit all, and predit test data
-            clf = Pipeline([('v',TfidfVectorizer(min_df=5, max_df=500, max_features=None, strip_accents='unicode', analyzer='word', token_pattern=r'\w{1,}', ngram_range=(1, 2), use_idf=True, smooth_idf=True, sublinear_tf=True, stop_words = 'english')), 
-            ('svd', TruncatedSVD(n_components=175, algorithm='randomized', n_iter=5, random_state=None, tol=0.0)), 
+            prp=Pipeline([('v',TfidfVectorizer(min_df=5, max_df=500, max_features=None, strip_accents='unicode', analyzer='word', token_pattern=r'\w{1,}', ngram_range=(1, 2), use_idf=True, smooth_idf=True, sublinear_tf=True, stop_words = 'english')), 
+            ('svd', TruncatedSVD(n_components=175, algorithm='randomized', n_iter=5, random_state=None, tol=0.0))]) 
+            s_data=prp.fit_transform(s_data)+trssv.sensimvar()
+            t_data=prp.fit_transform(t_data)+tsssv.sensimvar()
+            clf = Pipeline([
             ('scl', StandardScaler(copy=True, with_mean=True, with_std=True)), 
             ('svm', SVC(C=9.0, kernel='rbf', degree=3, gamma=0.0, coef0=0.0, shrinking=True, probability=False, tol=0.001, cache_size=200, class_weight=None, verbose=False, max_iter=-1, random_state=None))])
             clf.fit(s_data, s_labels)
             t_labels = clf.predict(t_data)
-            #-------------------------------------------------------
-            
+            #-------------------------------------------------------            
             # Create partial submission file
             test  = pd.read_csv("input/test.csv").fillna("")             
             idx = test.id.values.astype(int)
