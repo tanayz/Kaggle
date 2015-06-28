@@ -119,7 +119,19 @@ print np.corrcoef(l1, tfv)[0, 1]
 print np.corrcoef(l1, lv)[0, 1]     
     
     
-    
+import sensim
+sf=[];st=[]
+
+for i in range(10158):
+    sf.append(sensim.similarity(trq[i], trp[i], False))
+    st.append(sensim.similarity(trq[i], trp[i], True))
+
+
+print np.corrcoef(l1, sf)[0, 1]
+print np.corrcoef(l1, st)[0, 1] 
+
+#0.241178664079
+#0.262722428745   
     
     
     
