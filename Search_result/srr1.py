@@ -13,7 +13,7 @@ from sklearn.decomposition import TruncatedSVD
 from sklearn.preprocessing import StandardScaler
 from sklearn import pipeline, metrics, grid_search
 #from sklearn import decomposition
-from nltk.stem.porter import *
+from nltk.stem.porter import PorterStemmer
 import re
 from bs4 import BeautifulSoup
 from sklearn.pipeline import Pipeline
