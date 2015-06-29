@@ -102,7 +102,7 @@ def sensimvar():
     tfidf = TfidfVectorizer() 
     
     tfv=[];lv=[]
-    for i in range(10158):       
+    for i in range(len(train)):       
         tfs = tfidf.fit_transform(trp[i].split(" "))
         response = tfidf.transform(trq[i].split(" ")) 
     #    print response  
@@ -121,11 +121,11 @@ def sensimvar():
     import sensim
     sf=[];st=[]
     
-    for i in range(10158):
+    for i in range(len(train)):
         sf.append(sensim.similarity(trq[i], trp[i], False))
         st.append(sensim.similarity(trq[i], trp[i], True))
     
-    return [l2]+[tfv]+[lv]+[sf]+[st]
+    return [[l2]+[tfv]+[lv]+[sf]+[st]]
 #    print np.corrcoef(l1, sf)[0, 1] #0.241178664079
 #    print np.corrcoef(l1, st)[0, 1] #0.262722428745 
     
