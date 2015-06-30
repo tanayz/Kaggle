@@ -195,76 +195,78 @@ if __name__ == '__main__':
     best_model = model.best_estimator_
     
     # Fit model with best parameters optimized for quadratic_weighted_kappa
+    X=np.nan_to_num(X);
+    X_test=np.nan_to_num(X_test)
     best_model.fit(X,y)
     ypred1 = best_model.predict(X_test)
     
-    #load data
-    train = pd.read_csv("input/train.csv").fillna("")
-    test  = pd.read_csv("input/test.csv").fillna("")
-    
-    # we dont need ID columns
-    idx = test.id.values.astype(int)
-    train = train.drop('id', axis=1)
-    test = test.drop('id', axis=1)
-    
-    # create labels. drop useless columns
-    y = train.median_relevance.values
-    train = train.drop(['median_relevance', 'relevance_variance'], axis=1)
-    
-    # do some lambda magic on text columns
-    traindata = list(train.apply(lambda x:'%s %s' % (x['query'],x['product_title']),axis=1))
-    testdata = list(test.apply(lambda x:'%s %s' % (x['query'],x['product_title']),axis=1))
-    
-    # the infamous tfidf vectorizer (Do you remember this one?)
-    tfv = TfidfVectorizer(min_df=3,  max_features=None, 
-            strip_accents='unicode', analyzer='word',token_pattern=r'\w{1,}',
-            ngram_range=(1, 2), use_idf=1,smooth_idf=1,sublinear_tf=1,
-            stop_words = 'english')
-    
-    # Fit TFIDF
-    tfv.fit(traindata)
-    X =  tfv.transform(traindata) 
-    X_test = tfv.transform(testdata)
-    
-    # Initialize SVD
-    svd = TruncatedSVD(n_components=300,random_state=None)
-    X=np.hstack([svd.fit_transform(X),np.asarray(trv).reshape(10158,5)])
-    X_test=np.hstack([svd.fit_transform(X_test),np.asarray(tsv).reshape(22513,5)])
-    
-    # Initialize the standard scaler 
-    scl = StandardScaler()
-    
-    # We will use SVM here..
-    svm_model = SVC()
-    
-    # Create the pipeline 
-    clf = pipeline.Pipeline([('scl', scl),
-                    	     ('svm', svm_model)])
-    
-    # Create a parameter grid to search for best parameters for everything in the pipeline
-    param_grid = {'svm__C': [9]}
-    
-    # Kappa Scorer 
-    kappa_scorer = metrics.make_scorer(quadratic_weighted_kappa, greater_is_better = True)
-    
-    # Initialize Grid Search Model
-    model = grid_search.GridSearchCV(estimator = clf, param_grid=param_grid, scoring=kappa_scorer,
-                                     verbose=10, n_jobs=-1, iid=True, refit=True, cv=5)
-                                     
-    # Fit Grid Search Model
-    model.fit(X, y)
-    print("Best score: %0.3f" % model.best_score_)
-    print("Best parameters set:")
-    best_parameters = model.best_estimator_.get_params()
-    for param_name in sorted(param_grid.keys()):
-    	print("\t%s: %r" % (param_name, best_parameters[param_name]))
-    
-    # Get best model
-    best_model = model.best_estimator_
-    
-    # Fit model with best parameters optimized for quadratic_weighted_kappa
-    best_model.fit(X,y)
-    preds = best_model.predict(X_test)
+#    #load data
+#    train = pd.read_csv("input/train.csv").fillna("")
+#    test  = pd.read_csv("input/test.csv").fillna("")
+#    
+#    # we dont need ID columns
+#    idx = test.id.values.astype(int)
+#    train = train.drop('id', axis=1)
+#    test = test.drop('id', axis=1)
+#    
+#    # create labels. drop useless columns
+#    y = train.median_relevance.values
+#    train = train.drop(['median_relevance', 'relevance_variance'], axis=1)
+#    
+#    # do some lambda magic on text columns
+#    traindata = list(train.apply(lambda x:'%s %s' % (x['query'],x['product_title']),axis=1))
+#    testdata = list(test.apply(lambda x:'%s %s' % (x['query'],x['product_title']),axis=1))
+#    
+#    # the infamous tfidf vectorizer (Do you remember this one?)
+#    tfv = TfidfVectorizer(min_df=3,  max_features=None, 
+#            strip_accents='unicode', analyzer='word',token_pattern=r'\w{1,}',
+#            ngram_range=(1, 2), use_idf=1,smooth_idf=1,sublinear_tf=1,
+#            stop_words = 'english')
+#    
+#    # Fit TFIDF
+#    tfv.fit(traindata)
+#    X =  tfv.transform(traindata) 
+#    X_test = tfv.transform(testdata)
+#    
+#    # Initialize SVD
+#    svd = TruncatedSVD(n_components=300,random_state=None)
+#    X=np.hstack([svd.fit_transform(X),np.asarray(trv).reshape(10158,5)])
+#    X_test=np.hstack([svd.fit_transform(X_test),np.asarray(tsv).reshape(22513,5)])
+#    
+#    # Initialize the standard scaler 
+#    scl = StandardScaler()
+#    
+#    # We will use SVM here..
+#    svm_model = SVC()
+#    
+#    # Create the pipeline 
+#    clf = pipeline.Pipeline([('scl', scl),
+#                    	     ('svm', svm_model)])
+#    
+#    # Create a parameter grid to search for best parameters for everything in the pipeline
+#    param_grid = {'svm__C': [9]}
+#    
+#    # Kappa Scorer 
+#    kappa_scorer = metrics.make_scorer(quadratic_weighted_kappa, greater_is_better = True)
+#    
+#    # Initialize Grid Search Model
+#    model = grid_search.GridSearchCV(estimator = clf, param_grid=param_grid, scoring=kappa_scorer,
+#                                     verbose=10, n_jobs=-1, iid=True, refit=True, cv=5)
+#                                     
+#    # Fit Grid Search Model
+#    model.fit(X, y)
+#    print("Best score: %0.3f" % model.best_score_)
+#    print("Best parameters set:")
+#    best_parameters = model.best_estimator_.get_params()
+#    for param_name in sorted(param_grid.keys()):
+#    	print("\t%s: %r" % (param_name, best_parameters[param_name]))
+#    
+#    # Get best model
+#    best_model = model.best_estimator_
+#    
+#    # Fit model with best parameters optimized for quadratic_weighted_kappa
+#    best_model.fit(X,y)
+#    preds = best_model.predict(X_test)
     
     #load data
     train = pd.read_csv("input/train.csv").fillna("")
@@ -309,6 +311,9 @@ if __name__ == '__main__':
     
     tr=np.hstack([tr,np.asarray(trv).reshape(10158,5)])
     ts=np.hstack([ts,np.asarray(tsv).reshape(22513,5)])
+    tr=np.nan_to_num(tr);
+    ts=np.nan_to_num(ts)
+
 
     
 #    clf = GradientBoostingClassifier(n_estimators=600, learning_rate=0.1,
@@ -321,14 +326,95 @@ if __name__ == '__main__':
     ypred2=clf.predict(ts)
     
     print 'Printing model performance'
-    print confusion_matrix(yobs, yhat),"\n",
+#    print confusion_matrix(yobs, yhat),"\n",
     print accuracy_score(yobs,yhat),"\n",classification_report(yobs,yhat)    
     from sklearn import cross_validation
     scores = cross_validation.cross_val_score(clf, tr, s_labels, cv=5,scoring='f1_weighted')
     print round(np.mean(scores),4),"\n",scores
     
-    ################################################################
-#    t_labels = clf.predict(t_data)
+    ###################################### Transform data for h2o#############
+    import h2o
+    from h2o import H2OFrame     
+    h2o.init(ip="localhost",strict_version_check=True)
+    
+    trd=[]
+    for l in tr:
+        trd.append(l.tolist())
+    
+    trdy=[]
+    for k in range(len(s_labels)):
+        trdy.append([s_labels[k]])
+        
+    xtr=H2OFrame(python_obj=trd)
+    ytr=H2OFrame(python_obj=trdy) 
+    
+    ytr["C1"]._name = "C6001"  # Rename the default column
+
+    
+    tsd=[]
+    for l in ts:
+        tsd.append(l.tolist())
+    xts=H2OFrame(python_obj=tsd)
+
+    
+    ############################## Apply h2o models ####################
+#    gb = h2o.gbm(x =xtr[1:175],y =ytr['C6001'],
+#                distribution = "multinomial",
+#                ntrees=1000, # 500 works well
+#                max_depth=12,
+#                learn_rate=0.01)
+########################Testing deep learning model#################                
+    dl= h2o.deeplearning(x =xtr[1:180],y =ytr['C6001'],
+                variable_importances=True,balance_classes=False,
+                input_dropout_ratio=0.2,rho=0.9,
+                hidden_dropout_ratios=[0.4,0.5,0.4,0.5],
+                activation="Tanh",hidden=[180,360,180,4],epochs=150)
+    rtr=dl.predict(xtr)
+    
+#    rf= h2o.random_forest(x =xtr[1:180],y =ytr['C6001'],
+#                seed=1234, ntrees=500, 
+#                max_depth=8, balance_classes=False)
+#    rtr=rf.predict(xtr)        
+        
+    
+    rtrp=h2o.as_list(rtr,use_pandas=False)[1:]
+    
+    yobs=[]
+    for i in range(len(s_labels)):
+        yobs.append(round(float(s_labels[i])))
+
+    yhat=[]
+    for i in range(len(rtrp)):
+        yhat.append(round(float(rtrp[i][0])))
+
+
+    print accuracy_score(yobs,yhat),"\n",classification_report(yobs,yhat)    
+###########################################################################
+                    
+ 
+    
+    
+    rp=dl.predict(xts)
+    rpp=h2o.as_list(rp,use_pandas=False)[1:]
+    
+#    rtr=rf.predict(xtr)
+#    rtrp=h2o.as_list(rtr,use_pandas=False)[1:]
+#    
+#    rp=rf.predict(xts)
+#    rpp=h2o.as_list(rp,use_pandas=False)[1:]
+#    gbp=gb.predict(xts) 
+
+    #############################Pritint result######################
+        
+    ypred=[]
+    for i in range(len(rpp)):
+        ypred.append(round(float(rpp[i][0])))
+
+    
+    print 'Printing model performance'
+#    print confusion_matrix(yobs, yhat),"\n",
+    print accuracy_score(yobs,yhat),"\n",classification_report(yobs,yhat)    
+######################################################################################
     
     import math
     p3 = []
