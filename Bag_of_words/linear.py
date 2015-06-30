@@ -1,11 +1,11 @@
 import os
 from KaggleWord2VecUtility import KaggleWord2VecUtility
 from sklearn.feature_extraction.text import TfidfVectorizer
-#from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
 from sklearn import cross_validation
-from sklearn import pipeline, metrics, grid_search
-from sklearn.preprocessing import StandardScaler
+#from sklearn import pipeline, metrics, grid_search
+#from sklearn.preprocessing import StandardScaler
 import pandas as pd
 import numpy as np
 
@@ -43,40 +43,40 @@ X_test = X_all[lentrain:]
 svm_model = SVC()
 
 # Create the pipeline 
-clf = pipeline.Pipeline([('svm', svm_model)])
+#clf = pipeline.Pipeline([('svm', svm_model)])
 
 # Create a parameter grid to search for best parameters for everything in the pipeline
-param_grid = {'svm__C': [0.1,1,3],'svm__kernel': ['rbf','linear','poly'],'svm__gamma':[0,0.01,0.1]}
+#param_grid = {'svm__C': [0.1,1,3],'svm__kernel': ['rbf','linear','poly'],'svm__gamma':[0,0.01,0.1]}
 
 # Initialize Grid Search Model
-model = grid_search.GridSearchCV(estimator = clf, param_grid=param_grid, 
-                                 verbose=10, n_jobs=-1, iid=True, refit=True, cv=5)
+#model = grid_search.GridSearchCV(estimator = clf, param_grid=param_grid, 
+#                                 verbose=10, n_jobs=-1, iid=True, refit=True, cv=5)
+#
+#
+## Fit Grid Search Model
+#model.fit(X, y)
+#print("Best score: %0.3f" % model.best_score_)
+#print("Best parameters set:")
+#best_parameters = model.best_estimator_.get_params()
+#for param_name in sorted(param_grid.keys()):
+#	print("\t%s: %r" % (param_name, best_parameters[param_name]))
+#
+## Get best model
+#best_model = model.best_estimator_
 
 
-# Fit Grid Search Model
-model.fit(X, y)
-print("Best score: %0.3f" % model.best_score_)
-print("Best parameters set:")
-best_parameters = model.best_estimator_.get_params()
-for param_name in sorted(param_grid.keys()):
-	print("\t%s: %r" % (param_name, best_parameters[param_name]))
-
-# Get best model
-best_model = model.best_estimator_
-
-
-#model = LogisticRegression(penalty='l2', dual=True, tol=0.0001, 
-#                         C=1, fit_intercept=True, intercept_scaling=1.0, 
-#                         class_weight=None, random_state=None)
-#model = SVC(C=1.0, kernel='rbf', degree=3, gamma=0.0, coef0=0.0, shrinking=True, 
-#            probability=False, tol=0.001, cache_size=200, class_weight=None, verbose=False, 
-#            max_iter=-1, random_state=None)
+model = LogisticRegression(penalty='l2', dual=True, tol=0.0001, 
+                         C=1, fit_intercept=True, intercept_scaling=1.0, 
+                         class_weight=None, random_state=None)
+model = SVC(C=1.0, kernel='rbf', degree=3, gamma=0.0, coef0=0.0, shrinking=True, 
+            probability=False, tol=0.001, cache_size=200, class_weight=None, verbose=False, 
+            max_iter=-1, random_state=None)
 
 print "5 Fold CV Score: ", np.mean(cross_validation.cross_val_score(model, X, y, cv=5, scoring='roc_auc'))
 
 print "Retrain on all training data, predicting test labels...\n"
-best_model.fit(X,y)
-result = best_model.predict_proba(X_test)[:,1]
+model.fit(X,y)
+result = model.predict_proba(X_test)[:,1]
 output = pd.DataFrame( data={"id":test["id"], "sentiment":result} )
 
 # Use pandas to write the comma-separated output file
