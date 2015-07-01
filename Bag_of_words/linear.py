@@ -19,27 +19,6 @@ traindata = []
 for i in xrange( 0, len(train["review"])):
     traindata.append(" ".join(KaggleWord2VecUtility.review_to_wordlist(train["review"][i], False)))
 testdata = []
-for i in xrange(0,len(test["review"])):import os
-from KaggleWord2VecUtility import KaggleWord2VecUtility
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.linear_model import LogisticRegression
-from sklearn.svm import SVC
-from sklearn import cross_validation
-#from sklearn import pipeline, metrics, grid_search
-#from sklearn.preprocessing import StandardScaler
-import pandas as pd
-import numpy as np
-
-train = pd.read_csv(os.path.join(os.path.dirname(__file__), 'data', 'labeledTrainData.tsv'), header=0, \
-                delimiter="\t", quoting=3)
-test = pd.read_csv(os.path.join(os.path.dirname(__file__), 'data', 'testData.tsv'), header=0, delimiter="\t", \
-               quoting=3 )
-y = train["sentiment"]  
-print "Cleaning and parsing movie reviews...\n"      
-traindata = []
-for i in xrange( 0, len(train["review"])):
-    traindata.append(" ".join(KaggleWord2VecUtility.review_to_wordlist(train["review"][i], False)))
-testdata = []
 for i in xrange(0,len(test["review"])):
     testdata.append(" ".join(KaggleWord2VecUtility.review_to_wordlist(test["review"][i], False)))
 print 'vectorizing... ', 
