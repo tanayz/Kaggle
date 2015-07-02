@@ -230,7 +230,7 @@ if __name__ == '__main__':
     scl = StandardScaler()
     
     # We will use SVM here..
-    svm_model = OutputCodeClassifier(SVC(C=10.),code_size=2, random_state=0)
+    svm_model = OneVsRestClassifier(SVC(C=10.))
     
     # Create the pipeline 
     model = pipeline.Pipeline([('UnionInput', FeatureUnion([('svd', svd), ('dense_features', FeatureInserter())])),
@@ -269,7 +269,7 @@ if __name__ == '__main__':
     clf = Pipeline([('v',TfidfVectorizer(min_df=5, max_df=500, max_features=None, strip_accents='unicode', analyzer='word', token_pattern=r'\w{1,}', ngram_range=(1, 2), use_idf=True, smooth_idf=True, sublinear_tf=True, stop_words = 'english')), 
     ('svd', TruncatedSVD(n_components=450, algorithm='randomized', n_iter=5, random_state=None, tol=0.0)), 
     ('scl', StandardScaler(copy=True, with_mean=True, with_std=True)), 
-    ('svm', OutputCodeClassifier(SVC(C=10.0, kernel='rbf', degree=3, gamma=0.0, coef0=0.0, shrinking=True, probability=False, tol=0.001, cache_size=200, class_weight=None, verbose=False, max_iter=-1, random_state=None),code_size=2, random_state=0))])
+    ('svm', OneVsRestClassifier(SVC(C=10.0, kernel='rbf', degree=3, gamma=0.0, coef0=0.0, shrinking=True, probability=False, tol=0.001, cache_size=200, class_weight=None, verbose=False, max_iter=-1, random_state=None)))])
     clf.fit(s_data, s_labels)
     t_labels = clf.predict(t_data)
 
@@ -298,9 +298,9 @@ if __name__ == '__main__':
 #    Model2 gamma 0 to 0.001 GM 0.915 Model cv scores: 0.6504 0.6294
 #    Model2 algorithm randomized to algorithm='arpack': GM 0.9530  Model cv scores: 0.6484 0.6256
 #    450 & 450 # Model1 0.6486 0.9191 model2 0.6241  0.9569 GM 0.9532
-#    Model2 onevsrest 0.6248 0.96022
-#    Model2 OneVsOne 
-#    Model2 OutputCode 
+#    Model2 onevsrest  0.9255 0.644  0.9605 0.6268 GM 0.9558
+#    Model2 OneVsOne 0.9182 0.6488 0.9568 0.6261 GM 0.9522
+#    Model2 OutputCode 0.9161 0.6509 0.9553 0.6236 GM 0.9474
 
 ############################################################################################
     import math
