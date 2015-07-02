@@ -28,7 +28,7 @@ from sklearn.feature_extraction import text
 import string
 from sklearn.pipeline import Pipeline, FeatureUnion
 from sklearn.metrics import accuracy_score,classification_report#,confusion_matrix
-
+from sklearn.multiclass import OneVsRestClassifier,OneVsOneClassifier,OutputCodeClassifier
 
 # array declarations
 sw=[]
@@ -192,7 +192,7 @@ if __name__ == '__main__':
     X_test, _ = vectorize(test, tfv_query)
     
     # Initialize SVD
-    svd = TruncatedSVD(n_components=400)
+    svd = TruncatedSVD(n_components=450,algorithm='randomized')
     from sklearn.metrics.pairwise import linear_kernel
     class FeatureInserter():
         
@@ -230,7 +230,7 @@ if __name__ == '__main__':
     scl = StandardScaler()
     
     # We will use SVM here..
-    svm_model = SVC(C=10.)
+    svm_model = OutputCodeClassifier(SVC(C=10.),code_size=2, random_state=0)
     
     # Create the pipeline 
     model = pipeline.Pipeline([('UnionInput', FeatureUnion([('svd', svd), ('dense_features', FeatureInserter())])),
@@ -267,9 +267,9 @@ if __name__ == '__main__':
         t_data.append(s)
     #create sklearn pipeline, fit all, and predit test data
     clf = Pipeline([('v',TfidfVectorizer(min_df=5, max_df=500, max_features=None, strip_accents='unicode', analyzer='word', token_pattern=r'\w{1,}', ngram_range=(1, 2), use_idf=True, smooth_idf=True, sublinear_tf=True, stop_words = 'english')), 
-    ('svd', TruncatedSVD(n_components=300, algorithm='randomized', n_iter=5, random_state=None, tol=0.0)), 
+    ('svd', TruncatedSVD(n_components=450, algorithm='randomized', n_iter=5, random_state=None, tol=0.0)), 
     ('scl', StandardScaler(copy=True, with_mean=True, with_std=True)), 
-    ('svm', SVC(C=10.0, kernel='rbf', degree=3, gamma=0.0, coef0=0.0, shrinking=True, probability=False, tol=0.001, cache_size=200, class_weight=None, verbose=False, max_iter=-1, random_state=None))])
+    ('svm', OutputCodeClassifier(SVC(C=10.0, kernel='rbf', degree=3, gamma=0.0, coef0=0.0, shrinking=True, probability=False, tol=0.001, cache_size=200, class_weight=None, verbose=False, max_iter=-1, random_state=None),code_size=2, random_state=0))])
     clf.fit(s_data, s_labels)
     t_labels = clf.predict(t_data)
 
@@ -285,7 +285,24 @@ if __name__ == '__main__':
     print round(np.mean(scores2),4),"\n",scores2
 
 ############################################################################################ 
-    
+#    Changed n_component from 200 to 300 for model 2 # Result got better by 2%
+#    Changed n_component from 400 to 300 for model 1 # Result got worse by 2%
+#    Changed n_component from 400 to 450 for model 1 # Result got better by 3.5%
+#    Changed n_component from 450 to 500 for model 1 # Result got better by 0.3%
+#    Changed n_component from 300 to 400 for model 2 # Result got better to 0.951
+#    however cv score is down
+#    Changed model2 n_component from 400 to 450# GM 0.956 Model cv scores: 0.651 0.6264
+#    Changed model2 C=11 GM 0.956 Model cv scores: 0.6482 0.6218
+#    Model2 max_df 500 to 600 GM 0.956 Model cv scores: 0.6504 0.6246
+#    Model2 degree 3 to 4 GM 0.954 Model cv scores: 0.6504 0.6233
+#    Model2 gamma 0 to 0.001 GM 0.915 Model cv scores: 0.6504 0.6294
+#    Model2 algorithm randomized to algorithm='arpack': GM 0.9530  Model cv scores: 0.6484 0.6256
+#    450 & 450 # Model1 0.6486 0.9191 model2 0.6241  0.9569 GM 0.9532
+#    Model2 onevsrest 0.6248 0.96022
+#    Model2 OneVsOne 
+#    Model2 OutputCode 
+
+############################################################################################
     import math
     p3 = []
     for i in range(len(preds)):
@@ -301,9 +318,9 @@ if __name__ == '__main__':
     yhat=yhat.astype(int)
 #    yhat = round(yhat)
     print 'Ensemble by GM',accuracy_score(yobs,yhat),"\n",classification_report(yobs,yhat)    
-
+    print 'Model cv scores:',round(np.mean(scores1),4),round(np.mean(scores2),4)
     # Create your first submission file
     submission = pd.DataFrame({"id": idx, "prediction": p3})
-    submission.to_csv("ensemble_svc_different_preproc.csv", index=False)
+    submission.to_csv("ensemble_svc_450_450_oe.csv", index=False)
 
 
