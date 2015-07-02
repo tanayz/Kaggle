@@ -13,7 +13,7 @@ from sklearn import pipeline, metrics, grid_search
     ('rf', RandomForestClassifier(n_estimators=20,max_depth=10))])
 
 
-    param_grid = {'rf__n_estimators': [20],'rf__max_depth': [10]}
+    param_grid = {'rf__n_estimators': [100,150],'rf__max_depth': [10,12]}
     
     model = grid_search.GridSearchCV(estimator = clf, param_grid=param_grid, 
                                      verbose=10, n_jobs=-1, iid=True, refit=True, cv=5)
@@ -24,7 +24,7 @@ from sklearn import pipeline, metrics, grid_search
     print("Best parameters set:")
     best_parameters = model.best_estimator_.get_params()
     for param_name in sorted(param_grid.keys()):
-    	print("\t%s: %r" % (param_name, best_parameters[param_name]))
+        print("\t%s: %r" % (param_name, best_parameters[param_name]))
     
     # Get best model
     best_model = model.best_estimator_
