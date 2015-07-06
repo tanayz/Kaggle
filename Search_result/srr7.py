@@ -19,7 +19,7 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.decomposition import TruncatedSVD
 from sklearn.preprocessing import StandardScaler
-from sklearn import  pipeline#, metrics, grid_search,decomposition,
+from sklearn import  pipeline# ,metrics, grid_search
 from nltk.stem.porter import PorterStemmer
 import re
 from bs4 import BeautifulSoup
@@ -28,8 +28,7 @@ from sklearn.feature_extraction import text
 import string
 from sklearn.pipeline import Pipeline, FeatureUnion
 from sklearn.metrics import accuracy_score,classification_report#,confusion_matrix
-from sklearn.multiclass import OneVsRestClassifier,OneVsOneClassifier,OutputCodeClassifier
-
+from sklearn.multiclass import OneVsRestClassifier
 # array declarations
 sw=[]
 s_data = []
@@ -192,7 +191,7 @@ if __name__ == '__main__':
     X_test, _ = vectorize(test, tfv_query)
     
     # Initialize SVD
-    svd = TruncatedSVD(n_components=450,algorithm='randomized')
+    svd = TruncatedSVD(n_components=400,algorithm='randomized')
     from sklearn.metrics.pairwise import linear_kernel
     class FeatureInserter():
         
@@ -233,9 +232,8 @@ if __name__ == '__main__':
     svm_model = OneVsRestClassifier(SVC(C=10.))
     
     # Create the pipeline 
-    model = pipeline.Pipeline([('UnionInput', FeatureUnion([('svd', svd), ('dense_features', FeatureInserter())])),
-    						 ('scl', scl),
-                    	     ('svm', svm_model)])
+    model = pipeline.Pipeline([('UnionInput', FeatureUnion([('svd', svd), ('dense_features', FeatureInserter())])),('scl', scl),('svm', svm_model)])
+
     # Fit Model
     model.fit(X, y)
 
@@ -267,9 +265,9 @@ if __name__ == '__main__':
         t_data.append(s)
     #create sklearn pipeline, fit all, and predit test data
     clf = Pipeline([('v',TfidfVectorizer(min_df=5, max_df=500, max_features=None, strip_accents='unicode', analyzer='word', token_pattern=r'\w{1,}', ngram_range=(1, 2), use_idf=True, smooth_idf=True, sublinear_tf=True, stop_words = 'english')), 
-    ('svd', TruncatedSVD(n_components=450, algorithm='randomized', n_iter=5, random_state=None, tol=0.0)), 
+    ('svd', TruncatedSVD(n_components=300, algorithm='randomized', n_iter=5, random_state=None, tol=0.0)), 
     ('scl', StandardScaler(copy=True, with_mean=True, with_std=True)), 
-    ('svm', OneVsRestClassifier(SVC(C=10.0, kernel='rbf', degree=3, gamma=0.0, coef0=0.0, shrinking=True, probability=False, tol=0.001, cache_size=200, class_weight=None, verbose=False, max_iter=-1, random_state=None)))])
+    ('svm', OneVsRestClassifier(SVC(C=10.0,kernel='rbf', degree=3, coef0=0.0, shrinking=True, probability=False, tol=0.001, cache_size=200, class_weight=None, verbose=False, max_iter=-1, random_state=None)))])
     clf.fit(s_data, s_labels)
     t_labels = clf.predict(t_data)
 
@@ -321,6 +319,6 @@ if __name__ == '__main__':
     print 'Model cv scores:',round(np.mean(scores1),4),round(np.mean(scores2),4)
     # Create your first submission file
     submission = pd.DataFrame({"id": idx, "prediction": p3})
-    submission.to_csv("ensemble_svc_450_450_oe.csv", index=False)
+    submission.to_csv("ensemble_svc_400_300.csv", index=False)
 
 

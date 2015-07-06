@@ -127,7 +127,7 @@ def load_preds(csv_file):
     preds=preds['prediction']
     preds=list (preds)
     return preds
-tsssv
+
 if __name__ == '__main__':
     
     def model1(n_jobs=6,compute_csv=True):
