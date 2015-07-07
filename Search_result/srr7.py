@@ -1,21 +1,30 @@
 """
+Original:
 Beating the Benchmark 
 Search Results Relevance @ Kaggle
-__Orginalauthor__ : Abhishek
-__author__ : OverfitterScientist
+__author__ : Abhishek
+
+Forked from Clubbing2Benchmark 
+__author__: Justfor
+
+changed by
+__author__: Henning Sperr
+
+Modified by justfor
 """
+
 import pandas as pd
 import numpy as np
 #from sklearn.linear_model import LogisticRegression
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.svm import SVC
 from sklearn.decomposition import TruncatedSVD
 from sklearn.preprocessing import StandardScaler
-from sklearn import pipeline
-from sklearn.feature_extraction import text
+from sklearn import  pipeline# ,metrics, grid_search
 from nltk.stem.porter import PorterStemmer
-from bs4 import BeautifulSoup
 import re
+from bs4 import BeautifulSoup
+from sklearn.svm import SVC
+from sklearn.feature_extraction import text
 import string
 from sklearn.pipeline import Pipeline, FeatureUnion
 from sklearn.metrics import accuracy_score,classification_report#,confusion_matrix
@@ -223,79 +232,26 @@ if __name__ == '__main__':
     svm_model = OneVsRestClassifier(SVC(C=10.))
     
     # Create the pipeline 
-    model = pipeline.Pipeline([('UnionInput', FeatureUnion([('svd', svd), ('dense_features', FeatureInserter())])),('scl', scl)])
-    
-    model.fit(X,y)
-    
-    Xtrh=model.fit_transform(X)
-    Xtsh=model.fit_transform(X_test)
-    
-        ############################# Transform data for h2o#############
-    import h2o
-    from h2o import H2OFrame     
-    h2o.init()
-    
-    trd1=[]
-    for l in Xtrh:
-        trd1.append(l.tolist())
-    
-    trdy1=[]
-    for k in range(len(y)):
-        trdy1.append([y[k]])
-        
-    xtr1=H2OFrame(python_obj=trd1)
-    ytr1=H2OFrame(python_obj=trdy1) 
-    
-    ytr1["C1"]._name = "C6001"  # Rename the default column
-    
-    tsd1=[]
-    for l in Xtsh:
-        tsd1.append(l.tolist())
-    xts1=H2OFrame(python_obj=tsd1)
-    
-    
-    ############################## Apply h2o models ####################
-#    gb = h2o.gbm(x =xtr[1:175],y =ytr['C6001'],
-#                distribution = "multinomial",
-#                ntrees=1000, # 500 works well
-#                max_depth=12,
-#                learn_rate=0.01)
-                
-    dl1= h2o.deeplearning(x =xtr1[1:402],y =ytr1['C6001'],
-                variable_importances=True,balance_classes=False,
-                input_dropout_ratio=0.2,rho=0.99,
-                hidden_dropout_ratios=[0.5,0.4,0.5,0.4],
-                activation="Tanh",hidden=[402,600,402,4],epochs=75)
-                
-#    rf= h2o.random_forest(x =xtr[1:175],y =ytr['C6001'],
-#                seed=1234, ntrees=600, 
-#                max_depth=20, balance_classes=False)
-    dlh1=dl1.predict(xtr1) 
-    dly1=h2o.as_list(dlh1)
-    yhat1=np.round(dly1['predict'].reshape(-1))
-    yhat1=np.nan_to_num(yhat1)
-    
-    dls1 = dl1.predict(xts1)
-    dls1=h2o.as_list(dls1)
-    dls1=np.round(dls1['predict'].reshape(-1))
-    dls1=np.nan_to_num(dls1)
-    
-    preds1=[]
-    for d in dls1:
-        preds1.append(dls1[d])
-
-
-    #############################Pritint result######################
-    yobs=y
-    print 'Printing model performance'
-#    print confusion_matrix(yobs, yhat),"\n",
-    print accuracy_score(yobs,yhat1),"\n",classification_report(yobs,yhat1)    
+    model = pipeline.Pipeline([('UnionInput', FeatureUnion([('svd', svd), ('dense_features', FeatureInserter())])),('scl', scl),('svm', svm_model)])
 
     # Fit Model
-#    model.fit(X, y)
+    model.fit(X, y)
 
-#    preds = model.predict(X_test)    
+    preds = model.predict(X_test)
+###################################Model performance ############    
+    yobs=y
+    yhat1=model.predict(X)
     
+    print 'Printing model1 performance'
+#    print confusion_matrix(yobs, yhat),"\n",
+    print accuracy_score(yobs,yhat1),"\n",classification_report(yobs,yhat1)    
+    from sklearn import cross_validation
+    scores1 = cross_validation.cross_val_score(model, X, y, cv=5,scoring='f1_weighted')
+    print round(np.mean(scores1),4),"\n",scores1
+
+############################################################################################ 
+
+
     for i in range(len(train.id)):
         s=(" ").join(["q"+ z for z in BeautifulSoup(train["query"][i]).get_text(" ").split(" ")]) + " " + (" ").join(["z"+ z for z in BeautifulSoup(train.product_title[i]).get_text(" ").split(" ")]) + " " + BeautifulSoup(train.product_description[i]).get_text(" ")
         s=re.sub("[^a-zA-Z0-9]"," ", s)
@@ -307,96 +263,62 @@ if __name__ == '__main__':
         s=re.sub("[^a-zA-Z0-9]"," ", s)
         s= (" ").join([stemmer.stem(z) for z in s.split(" ")])
         t_data.append(s)
-    #create sklearn pipeline, fit all, and predict test data
+    #create sklearn pipeline, fit all, and predit test data
     clf = Pipeline([('v',TfidfVectorizer(min_df=5, max_df=500, max_features=None, strip_accents='unicode', analyzer='word', token_pattern=r'\w{1,}', ngram_range=(1, 2), use_idf=True, smooth_idf=True, sublinear_tf=True, stop_words = 'english')), 
-    ('svd', TruncatedSVD(n_components=200, algorithm='randomized', n_iter=5, random_state=None, tol=0.0)), 
-    ('scl', StandardScaler(copy=True, with_mean=True, with_std=True))]) 
-#    ('svm', SVC(C=9.0, kernel='rbf', degree=3, gamma=0.0, coef0=0.0, shrinking=True, probability=False, tol=0.001, cache_size=200, class_weight=None, verbose=False, max_iter=-1, random_state=None))])
-#    clf.fit(s_data, s_labels)
-    tr=clf.fit_transform(s_data)
-    ts=clf.fit_transform(t_data)
-    ############################# Transform data for h2o#############
-    import h2o
-    from h2o import H2OFrame     
-    h2o.init(ip="localhost",strict_version_check=False)
-    
-    trd=[]
-    for l in tr:
-        trd.append(l.tolist())
-    
-    trdy=[]
-    for k in range(len(s_labels)):
-        trdy.append([s_labels[k]])
-        
-    xtr=H2OFrame(python_obj=trd)
-    ytr=H2OFrame(python_obj=trdy) 
-    
-    ytr["C1"]._name = "C6001"  # Rename the default column
-    
-    tsd=[]
-    for l in ts:
-        tsd.append(l.tolist())
-    xts=H2OFrame(python_obj=tsd)
-    
-    
-    ############################## Apply h2o models ####################
-#    gb = h2o.gbm(x =xtr[1:175],y =ytr['C6001'],
-#                distribution = "multinomial",
-#                ntrees=1000, # 500 works well
-#                max_depth=12,
-#                learn_rate=0.01)
-                
-    dl= h2o.deeplearning(x =xtr[1:200],y =ytr['C6001'],
-                variable_importances=True,balance_classes=False,
-                input_dropout_ratio=0.2,rho=0.99,
-                hidden_dropout_ratios=[0.5,0.4,0.4,0.4],
-                activation="Tanh",hidden=[200,400,200,4],epochs=80)
-                
-#    rf= h2o.random_forest(x =xtr[1:175],y =ytr['C6001'],
-#                seed=1234, ntrees=600, 
-#                max_depth=20, balance_classes=False)
-    dlh=dl.predict(xtr) 
-    dly=h2o.as_list(dlh)
-    yhat2=np.round(dly['predict'].reshape(-1))
+    ('svd', TruncatedSVD(n_components=300, algorithm='randomized', n_iter=5, random_state=None, tol=0.0)), 
+    ('scl', StandardScaler(copy=True, with_mean=True, with_std=True)), 
+    ('svm', OneVsRestClassifier(SVC(C=10.0,kernel='rbf', degree=3, coef0=0.0, shrinking=True, probability=False, tol=0.001, cache_size=200, class_weight=None, verbose=False, max_iter=-1, random_state=None)))])
+    clf.fit(s_data, s_labels)
+    t_labels = clf.predict(t_data)
 
-        
+###################################Model performance ############    
+    yobs=s_labels
+    yhat2=clf.predict(s_data)
     
-    #############################Pritint result######################
-    yobs=y
-    print 'Printing model performance'
+    print 'Printing model2 performance'
 #    print confusion_matrix(yobs, yhat),"\n",
     print accuracy_score(yobs,yhat2),"\n",classification_report(yobs,yhat2)    
-    
-    ################################################################
-    dls2 = dl.predict(xts)
-    dls2=h2o.as_list(dls2)
-    dls2=np.round(dls2['predict'].reshape(-1))
-    dls2=np.nan_to_num(dls2)
-    
-    preds2=[]
-    for d in dls2:
-        preds2.append(dls2[d])
+#    from sklearn import cross_validation
+    scores2 = cross_validation.cross_val_score(clf, s_data, s_labels, cv=5,scoring='f1_weighted')
+    print round(np.mean(scores2),4),"\n",scores2
 
-#    t_labels = clf.predict(t_data)
-    
+############################################################################################ 
+#    Changed n_component from 200 to 300 for model 2 # Result got better by 2%
+#    Changed n_component from 400 to 300 for model 1 # Result got worse by 2%
+#    Changed n_component from 400 to 450 for model 1 # Result got better by 3.5%
+#    Changed n_component from 450 to 500 for model 1 # Result got better by 0.3%
+#    Changed n_component from 300 to 400 for model 2 # Result got better to 0.951
+#    however cv score is down
+#    Changed model2 n_component from 400 to 450# GM 0.956 Model cv scores: 0.651 0.6264
+#    Changed model2 C=11 GM 0.956 Model cv scores: 0.6482 0.6218
+#    Model2 max_df 500 to 600 GM 0.956 Model cv scores: 0.6504 0.6246
+#    Model2 degree 3 to 4 GM 0.954 Model cv scores: 0.6504 0.6233
+#    Model2 gamma 0 to 0.001 GM 0.915 Model cv scores: 0.6504 0.6294
+#    Model2 algorithm randomized to algorithm='arpack': GM 0.9530  Model cv scores: 0.6484 0.6256
+#    450 & 450 # Model1 0.6486 0.9191 model2 0.6241  0.9569 GM 0.9532
+#    Model2 onevsrest  0.9255 0.644  0.9605 0.6268 GM 0.9558
+#    Model2 OneVsOne 0.9182 0.6488 0.9568 0.6261 GM 0.9522
+#    Model2 OutputCode 0.9161 0.6509 0.9553 0.6236 GM 0.9474
+
+############################################################################################
     import math
     p3 = []
-    for i in range(len(preds1)):
-        x =math.sqrt(preds1[i]*preds2[i])
+    for i in range(len(preds)):
+        x =math.sqrt((int(t_labels[i]))*preds[i])
         x = round(x)
         p3.append(int(x))
     ##### Tell the performance of ensemble #######
-#    yhat2=yhat2.astype(int)
+    yhat2=yhat2.astype(int)
     yobs=np.asarray(yobs,dtype=int)
     yhat=(yhat1+yhat2)/2
-    yhat=np.round(yhat)
-
     print 'Ensemble by AM',accuracy_score(yobs,yhat),"\n",classification_report(yobs,yhat) 
-    yhat=np.round(np.sqrt(yhat1*yhat2))
+    yhat=np.sqrt(yhat1*yhat2)
     yhat=yhat.astype(int)
 #    yhat = round(yhat)
     print 'Ensemble by GM',accuracy_score(yobs,yhat),"\n",classification_report(yobs,yhat)    
-#    print 'Model cv scores:',round(np.mean(scores1),4),round(np.mean(scores2),4)
+    print 'Model cv scores:',round(np.mean(scores1),4),round(np.mean(scores2),4)
     # Create your first submission file
     submission = pd.DataFrame({"id": idx, "prediction": p3})
-    submission.to_csv("ensemble_svc_400_200_1st.csv", index=False)
+    submission.to_csv("ensemble_svc_400_300.csv", index=False)
+
+
