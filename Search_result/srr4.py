@@ -367,14 +367,14 @@ if __name__ == '__main__':
     dl= h2o.deeplearning(x =xtr[1:180],y =ytr['C6001'],
                 variable_importances=True,balance_classes=False,
                 input_dropout_ratio=0.2,rho=0.9,
-                hidden_dropout_ratios=[0.4,0.5,0.4,0.5],
-                activation="Tanh",hidden=[180,360,180,4],epochs=150)
+                hidden_dropout_ratios=[0.4,0.5,0.4,0.5,0.4],
+                activation="Tanh",hidden=[180,360,360,180,4],epochs=150)
     rtr=dl.predict(xtr)
     
 #    rf= h2o.random_forest(x =xtr[1:180],y =ytr['C6001'],
 #                seed=1234, ntrees=500, 
 #                max_depth=8, balance_classes=False)
-#    rtr=rf.predict(xtr)        
+#    rtr=rf.predict(xtr)     
         
     
     rtrp=h2o.as_list(rtr,use_pandas=False)[1:]
