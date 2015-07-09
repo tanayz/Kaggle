@@ -1,3 +1,8 @@
+"""
+Author:Tanay Chowdhury
+Following the R script from arnaud demytt 
+"""
+
 import pandas as pd
 import numpy as np
 import glob
@@ -48,28 +53,45 @@ for i in range(len(train1.columns)):
       train1.ix[:,i]=train1.ix[:,i].fillna(-1) 
     else:
        train1.ix[:,i]=train1.ix[:,i].fillna("NAvalue") 
+       
+for i in range(len(test1.columns)):
+    if test1.ix[:,i].dtypes  != 'O':
+      test1.ix[:,i]=test1.ix[:,i].fillna(-1) 
+    else:
+       test1.ix[:,i]=test1.ix[:,i].fillna("NAvalue") 
+
 
 
 ### Clean variables with too many categories
-for i in range(len(charcols)):
-    print charcols[i],len(set(train1[charcols[i]]))
-    tmp=train1[charcols[i]].value_counts()<30
-    for j in range(len(train1[charcols[i]])):
-        val=train1[charcols[i]][[j]].values[0]
-        if val in tmp.index and tmp[val]:
-            train1[charcols[i]][[j]]='rarevalue'
+#for i in range(len(charcols)):
+#    print charcols[i],len(set(train1[charcols[i]]))
+#    tmp=train1[charcols[i]].value_counts()<30
+#    for j in range(len(train1[charcols[i]])):
+#        val=train1[charcols[i]][[j]].values[0]
+#        if val in tmp.index and tmp[val]:
+#            train1[charcols[i]][[j]]='rarevalue'
+#            
+#for i in range(len(charcols)):
+#    print charcols[i],len(set(test1[charcols[i]]))
+#    tmp=test1[charcols[i]].value_counts()<30
+#    for j in range(len(test1[charcols[i]])):
+#        val=test1[charcols[i]][[j]].values[0]
+#        if val in tmp.index and tmp[val]:
+#            test1[charcols[i]][[j]]='rarevalue'
+
 ################################################
 
 
-rf = RandomForestRegressor(random_state=0, n_estimators=30,max_depth=10)
-rf.fit(train1,y)
+rf = RandomForestRegressor(random_state=0, n_estimators=40,max_depth=10)
+rf.fit(train1[numcols],y)
 
-yhat=rf.predict(train1)
+yhat=rf.predict(train1[numcols])
 print mean_squared_error(yhat,y)
 
-pred=rf.predict(test1)
+pred=rf.predict(test1[numcols])
+pred=np.exp(pred)-1
 
-tmp=id.reshape(30235,1).astype('int')
+tmp=test['id'].reshape(30235,1).astype('int')
 tmp1=pred.reshape(30235,1)
 tmp2=np.hstack([tmp,tmp1])
 df=pd.DataFrame.from_records(tmp2,columns=['id','cost'])
