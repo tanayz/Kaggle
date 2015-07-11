@@ -10,6 +10,8 @@ import pandas as pd
 import numpy as np
 from sklearn import ensemble, preprocessing
 import xgboost as xgb
+from sklearn.metrics import mean_squared_error
+
 
 # load training and test datasets
 train = pd.read_csv('../input/train_set.csv', parse_dates=[2,])
@@ -64,17 +66,20 @@ params["min_child_weight"] = 5
 params["subsample"] = 1.0
 params["scale_pos_weight"] = 1.0
 params["silent"] = 1
-params["max_depth"] = 7
+params["max_depth"] = 10
 
 plst = list(params.items())
 
 xgtrain = xgb.DMatrix(train, label=label_log)
 xgtest = xgb.DMatrix(test)
 
-num_rounds = 120
+num_rounds = 500
 model = xgb.train(plst, xgtrain, num_rounds)
 
 # get predictions from the model, convert them and dump them!
+yhat=np.expm1(model.predict(xgtrain))
+print mean_squared_error(yhat,labels)
+
 preds = np.expm1(model.predict(xgtest))
 preds = pd.DataFrame({"id": idx, "cost": preds})
 preds.to_csv('benchmark.csv', index=False)
